@@ -42,4 +42,4 @@ Build and deploy service-test-suite in roost cluster.
 Roost intelligently identifies service dependencies. So whenever dependent service is modified, specified test suite is triggered.
 In event of building ballot image or restart of the ballot app, service test suite would be triggered and fitness events can be seen from event viewer ( Observability -> Service Fitness -> Fitness Event).
 
-
+patch
