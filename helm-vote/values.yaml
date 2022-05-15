@@ -1,0 +1,33 @@
+# Default values for vote.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+httpServicePort: &defaultServicePort 80
+tag: &defaultTag latest
+namespace: default
+clusterIP: 10.10.0.10
+clusterDomain: nip.io
+registry: &defaultRegistry local-registry:5002
+
+services:
+  voter: 
+    imageName: voter # without registry-host and tag
+    imageTag: *defaultTag
+    serviceName: voter
+    servicePort: *defaultServicePort
+  ballot: 
+    imageName: ballot # without registry-host and tag
+    imageTag: *defaultTag
+    serviceName: "ballot"
+    servicePort: *defaultServicePort
+  electionCommission: 
+    imageName: election-commission # without registry-host and tag
+    imageTag: *defaultTag
+    serviceName: "ec"
+    servicePort: *defaultServicePort
+  ecserver: 
+    imageName: ecserver # without registry-host and tag
+    imageTag: *defaultTag
+    serviceName: "ecserver"
+    servicePort: *defaultServicePort
