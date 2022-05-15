@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Service
+metadata: 
+  labels: 
+    app: election-commission
+    type: roost-example
+  name: {{ .Values.services.electionCommission.serviceName }}
+  namespace: {{ .Values.namespace }}
+spec: 
+  selector: 
+    app: election-commission
+    type: roost-example
+  ports:
+  - name: http
+    port: {{ .Values.httpServicePort }}
+    targetPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: election-commission
+  namespace: {{ .Values.namespace }}
+  labels:
+    roost.ai/fitness.git-type: github
+    roost.ai/fitness.git-repo-name: voting_app
+    roost.ai/fitness.git-org: roost-io
+    roost.ai/fitness.git-branch: roost-eaas
+    roost.ai/fitness.git-test-path: service-test-suite.election-commission
+    roost.ai/fitness.test-type: cypress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: election-commission
+      type: roost-example
+  template:
+    metadata:
+      labels:
+        app: election-commission
+        type: roost-example
+    spec:
+      containers:
+      - name: election-commission
+        image: '{{- printf "%s/%s:%s" .Values.registry .Values.services.electionCommission.imageName latest -}}'
+        stdin: true
+        tty: true
+        env:
+        - name: EC_SERVER_ENDPOINT
+          value: "{{ .Values.namespace}}.{{ .Values.services.ecserver.serviceName }}.{{ .Values.clusterIP }}.{{ .Values.clusterDomain }}"
+        ports:
+        - containerPort: 80
