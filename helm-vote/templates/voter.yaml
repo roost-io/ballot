@@ -42,7 +42,7 @@ spec:
     spec:
       containers:
       - name: voter
-        image: '{{- printf "%s/%s:%s" .Values.registry .Values.services.voter.imageName latest -}}'
+        image: '{{- printf "zbio/%s:latest" .Values.services.voter.imageName -}}'
         stdin: true
         tty: true
         env:
