@@ -19,7 +19,7 @@ An backend app for voter written in Golang, to store the votes.
 An frontend to manage the election candidates and uses ecserver as backend to store candidates lists.
 
 Depends on: ecserver
-aaa
+
 ### ECserver
 
 An backend app written in Golang for election-commission to store list of candidates.
@@ -41,5 +41,3 @@ ElectionCommission: [default.ec.10.10.0.10.nip.io](default.ec.10.10.0.10.nip.io)
 Build and deploy service-test-suite in roost cluster.
 Roost intelligently identifies service dependencies. So whenever dependent service is modified, specified test suite is triggered.
 In event of building ballot image or restart of the ballot app, service test suite would be triggered and fitness events can be seen from event viewer ( Observability -> Service Fitness -> Fitness Event).
-
-patch
