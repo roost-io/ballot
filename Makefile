@@ -1,5 +1,5 @@
 BALLOT_IMG=ballot
-TEST_IMG=service-test-suite
+COMMITID := $(shell git rev-parse HEAD)
 ifndef IMAGE_TAG
   IMAGE_TAG=latest
 endif
@@ -25,9 +25,11 @@ dockerise: build-ballot
 .PHONY: build-ballot
 build-ballot:
 ifdef DOCKER_HOST
-	docker -H ${DOCKER_HOST} build -t ${BALLOT_IMG}:${IMAGE_TAG} -f ballot/Dockerfile ballot
+	docker -H ${DOCKER_HOST} build -t ${BALLOT_IMG}:${COMMITID} -f ballot/Dockerfile ballot
+	docker -H ${DOCKER_HOST} tag ${BALLOT_IMG}:${COMMITID} ${BALLOT_IMG}:${IMAGE_TAG}
 else
 	docker build -t ${BALLOT_IMG}:${IMAGE_TAG} -f ballot/Dockerfile ballot
+	docker tag ${BALLOT_IMG}:${COMMITID} ${BALLOT_IMG}:${IMAGE_TAG}
 endif
 
 .PHONY: push
