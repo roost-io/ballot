@@ -1,0 +1,11 @@
+{
+    "command": [
+      "curl",
+      "{{.ROOST_SVC_URL}}/tests/run",
+      "-X",
+      "GET",
+      "-H",
+      "Accept: application/json"
+    ],
+    "expected_status": "200"
+  }
