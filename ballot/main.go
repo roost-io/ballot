@@ -1,11 +1,18 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
+	"math/rand"
 	"net"
 	"net/http"
 	"sort"
+	"strings"
 	"sync"
 )
 
@@ -61,6 +68,90 @@ func writeVoterResponse(w http.ResponseWriter, status Status) {
 		log.Println("error marshaling response to vote request. error: ", err)
 	}
 	w.Write(resp)
+}
+
+func TestBallot() error {
+	_, result, err := httpClientRequest(http.MethodGet, net.JoinHostPort("", port), "/", nil)
+	if err != nil {
+		log.Printf("Failed to get ballot count resp:%s error:%+v", string(result), err)
+		return err
+	}
+	log.Println("get ballot resp:", string(result))
+	var initalRespData Response
+	if err = json.Unmarshal(result, &initalRespData); err != nil {
+		log.Printf("Failed to unmarshal get ballot response. %+v", err)
+		return err
+	}
+
+	var ballotvotereq Vote
+	ballotvotereq.CandidateID = fmt.Sprint(rand.Intn(10))
+	ballotvotereq.VoterID = fmt.Sprint(rand.Intn(10))
+	reqBuff, err := json.Marshal(ballotvotereq)
+	if err != nil {
+		log.Printf("Failed to marshall post ballot request %+v", err)
+		return err
+	}
+
+	_, result, err = httpClientRequest(http.MethodPost, net.JoinHostPort("", port), "/", bytes.NewReader(reqBuff))
+	if err != nil {
+		log.Printf("Failed to get ballot count resp:%s error:%+v", string(result), err)
+		return err
+	}
+	log.Println("post ballot resp:", string(result))
+	var postballotResp Status
+	if err = json.Unmarshal(result, &postballotResp); err != nil {
+		log.Printf("Failed to unmarshal post ballot response. %+v", err)
+		return err
+	}
+	if postballotResp.Code != 201 {
+		return errors.New("post ballot resp status code")
+	}
+
+	_, result, err = httpClientRequest(http.MethodGet, net.JoinHostPort("", port), "/", nil)
+	if err != nil {
+		log.Printf("Failed to get final ballot count resp:%s error:%+v", string(result), err)
+		return err
+	}
+	log.Println("get final ballot resp:", string(result))
+	var finalRespData Response
+	if err = json.Unmarshal(result, &finalRespData); err != nil {
+		log.Printf("Failed to unmarshal get final ballot response. %+v", err)
+		return err
+	}
+	if finalRespData.TotalVotes-initalRespData.TotalVotes != 1 {
+		return errors.New("ballot vote count error")
+	}
+	return nil
+}
+
+func httpClientRequest(operation, hostAddr, command string, params io.Reader) (int, []byte, error) {
+
+	url := "http://" + hostAddr + command
+	if strings.Contains(hostAddr, "http://") {
+		url = hostAddr + command
+	}
+
+	req, err := http.NewRequest(operation, url, params)
+	if err != nil {
+		return http.StatusBadRequest, nil, errors.New("Failed to create HTTP request." + err.Error())
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	httpClient := http.Client{}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return http.StatusBadRequest, nil, err
+	}
+	defer resp.Body.Close()
+
+	body, ioErr := ioutil.ReadAll(resp.Body)
+	if hBit := resp.StatusCode / 100; hBit != 2 && hBit != 3 {
+		if ioErr != nil {
+			ioErr = fmt.Errorf("status code error %d", resp.StatusCode)
+		}
+	}
+	return resp.StatusCode, body, ioErr
 }
 
 func serveRoot(w http.ResponseWriter, r *http.Request) {
@@ -127,8 +218,26 @@ func serveRoot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// runTest add votes and also checks the validity
+func runTest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
+	defer r.Body.Close()
+	log.Println("ballot endpoint tests running")
+	status := Status{}
+	err := TestBallot()
+	if err != nil {
+		status.Message = fmt.Sprintf("Test Cases Failed with error : %v", err)
+		status.Code = http.StatusBadRequest
+	}
+	status.Message = "Test Cases passed"
+	status.Code = http.StatusOK
+	writeVoterResponse(w, status)
+}
+
 func main() {
 	log.Println("ballot is ready to store votes")
 	http.HandleFunc("/", serveRoot)
+	http.HandleFunc("/tests/run", runTest)
 	log.Println(http.ListenAndServe(net.JoinHostPort("", port), nil))
 }

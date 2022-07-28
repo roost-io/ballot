@@ -1,0 +1,44 @@
+{
+	"info": {
+		"_postman_id": "40af28a8-b312-44fc-9cdb-794f2177d90a",
+		"name": "API-Health",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20293257"
+	},
+	"item": [
+		{
+			"name": "Health",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\",function() {",
+							"    pm.response.to.have.status(200)",
+							"}) ;"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"followOriginalHttpMethod": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ROOST_SVC_URL}}/tests/run",
+					"host": [
+						"{{ROOST_SVC_URL}}"
+					],
+					"path": [
+						"tests",
+						"run"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
