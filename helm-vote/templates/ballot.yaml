@@ -42,3 +42,6 @@ spec:
         image: '{{- printf "%s/%s:%s" .Values.registry .Values.services.ballot.imageName .Values.tag -}}'
         ports:
         - containerPort: 8080
+      imagePullSecrets:
+        - name: dockertoken
+
