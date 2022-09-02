@@ -1,6 +1,5 @@
-# Voting app
+# Ballot app
 This is ballot micro-service
-try
 
 ## About project
 
