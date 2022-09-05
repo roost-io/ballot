@@ -6,7 +6,7 @@ endif
 CLUSTER_IP := $(shell ping -W2 -n -q -c1 current-cluster-roost.io  2> /dev/null | awk -F '[()]' '/PING/ { print $$2}')
 
 # HOSTNAME := $(shell hostname)
-.PHONY: all
+.PHONY: all dockerise helm-deploy
 all: dockerise helm-deploy
 
 .PHONY: test
