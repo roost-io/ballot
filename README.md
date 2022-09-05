@@ -27,7 +27,7 @@ An backend app written in Golang for election-commission to store list of candid
 
 ## How to deploy
 
-Right-click on [Makefile](./Makefile) and choose Run.
+Right-click on [Makefile](./Makefile) and choose Run
 
 ## How to access application
 
