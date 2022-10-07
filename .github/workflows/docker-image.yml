@@ -8,7 +8,7 @@ on:
 env:
   pushtag: ${{ github.ref_name }}
   if: ${{ github.event_name == 'pull_request' }}
-  eventid: ${{ github.ref }}
+  eventid: pr-${{ github.event.action }}-${{ github.event.number }}
   
 jobs:
   build-push:
@@ -42,6 +42,6 @@ jobs:
         with:
           context: "{{defaultContext}}:ballot"
           push: true
-          tags: docker.io/zbio/ballot:${{ github.ref_name }}
+          tags: docker.io/zbio/ballot:${{ env.eventid }}
           build-args: |
             COMMIT_SHA=${{ github.sha }}
