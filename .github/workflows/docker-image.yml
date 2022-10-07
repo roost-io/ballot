@@ -5,10 +5,25 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
+  
+env:
+  image: ballot
+  ifpush: ${{ github.event_name == 'push' }}
+  pushtag: ${{ github.ref_name }}
+  if: ${{ github.event_name == 'pull_request' }}
+  eventid: pr-${{ github.event.action }}-${{ github.event.number }}
+  
 jobs:
+  dump-context:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump GitHub context
+        id: github_context_step
+        run: echo '${{ toJSON(github) }}'
+    
   build-push:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
     steps:
       -
         name: Set up QEMU
@@ -32,8 +47,40 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v3
         with:
-          context: "{{defaultContext}}:ballot"
+          context: "{{defaultContext}}:${{ env.image }}"
           push: true
-          tags: docker.io/zbio/ballot:${{ github.sha }}
+          tags: docker.io/zbio/${{ env.image }}:${{ env.pushtag }}
+          build-args: |
+            COMMIT_SHA=${{ github.sha }}
+  
+  build-pr:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      -
+        # Setting up Docker Buildx with docker-container driver is required
+        # at the moment to be able to use a subdirectory with Git context
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      -
+        name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: "{{defaultContext}}:${{ env.image }}"
+          push: true
+          tags: docker.io/zbio/${{ env.image }}:${{ env.eventid }}
           build-args: |
             COMMIT_SHA=${{ github.sha }}
