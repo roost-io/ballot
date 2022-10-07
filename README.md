@@ -1,6 +1,5 @@
 # Ballot app
 This is ballot micro-service
-hello
 ## About project
 
 Voting application contains various frontend and backend microservices. These microservices are deployed and are available over ingress in Roost Cluster.
