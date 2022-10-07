@@ -5,11 +5,19 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
+env:
+  pushtag: ${{ github.ref_name }}
+  if: ${{ github.event_name == 'pull_request' }}
+  eventid: ${{ github.ref }}
+  
 jobs:
   build-push:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
     steps:
+      - name: Dump GitHub context
+        id: github_context_step
+        run: echo '${{ toJSON(github) }}'
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -34,6 +42,6 @@ jobs:
         with:
           context: "{{defaultContext}}:ballot"
           push: true
-          tags: docker.io/zbio/ballot:${{ github.sha }}
+          tags: docker.io/zbio/ballot:${{ github.ref_name }}
           build-args: |
             COMMIT_SHA=${{ github.sha }}
