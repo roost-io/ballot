@@ -1,4 +1,4 @@
-FROM golang:alpine as builder
+FROM golang:1.19.3-alpine3.16 as builder
 LABEL maintainer="mgdevstack" \
     vendor="Zettabytes" \
     owner="zbio" \
@@ -8,8 +8,7 @@ ADD main_test.go  .
 RUN GO111MODULE=off CGO_ENABLED=0 GOOS=linux go build -o ballot
 RUN GO111MODULE=off CGO_ENABLED=0 GOOS=linux go test -c -o ballot.test
 
-# To execute unit test in container
-FROM alpine as ballottest
+FROM alpine:3.16.2 as ballottest
 LABEL maintainer="mgdevstack" \
     vendor="Zettabytes" \
     owner="zbio"
