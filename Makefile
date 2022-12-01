@@ -10,11 +10,13 @@ CLUSTER_IP := $(shell ping -W2 -n -q -c1 current-cluster-roost.io  2> /dev/null 
 all: dockerise helm-deploy
 
 .PHONY: test
-test: test-ballot
+test: unittest test-ballot
 
 .PHONY: test-ballot
 test-ballot:
-	echo "Test Ballot"
+	@echo "========================="
+	@echo "Running Artillery Test"
+	@echo "========================="
 	docker run --network="host" --rm -it -v ${PWD}/ballot/test:/scripts \
    zbio/artillery-custom \
    run -e unit /scripts/test.yaml
@@ -65,3 +67,11 @@ helm-undeploy:
 
 .PHONY: clean
 clean: helm-undeploy
+
+.PHONY: unittest
+unittest:
+	@echo "==================="
+	@echo "Running Unit Test"
+	@echo "==================="
+	docker build --target ballottest -t ${BALLOT_IMG}:${IMAGE_TAG}-uniitest -f ballot/Dockerfile ballot
+	docker run --rm ${BALLOT_IMG}:${IMAGE_TAG}-uniitest ballot.test -test.v -test.parallel 2 -test.count 50 -test.failfast
