@@ -21,9 +21,6 @@ test-ballot:
    zbio/artillery-custom \
    run -e unit /scripts/test.yaml
 
-.PHONY: dockerise
-dockerise: pre-dockerise build-ballot 
-
 .PHONY: pre-dockerise
 pre-dockerise:
 	docker pull golang:1.19.3-alpine3.16
@@ -32,7 +29,7 @@ pre-dockerise:
 	docker pull nginx:stable-alpine
 
 .PHONY: dockerise
-dockerise: build-ballot
+dockerise: pre-dockerise build-ballot
 
 .PHONY: build-ballot
 build-ballot:
@@ -40,7 +37,7 @@ ifdef DOCKER_HOST
 	docker -H ${DOCKER_HOST} build -t ${BALLOT_IMG}:${COMMITID} -f ballot/Dockerfile ballot
 	docker -H ${DOCKER_HOST} tag ${BALLOT_IMG}:${COMMITID} ${BALLOT_IMG}:${IMAGE_TAG}
 else
-	docker build -t ${BALLOT_IMG}:${IMAGE_TAG} -f ballot/Dockerfile ballot
+	docker build -t ${BALLOT_IMG}:${COMMITID} -f ballot/Dockerfile ballot
 	docker tag ${BALLOT_IMG}:${COMMITID} ${BALLOT_IMG}:${IMAGE_TAG}
 endif
 
