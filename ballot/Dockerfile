@@ -8,7 +8,8 @@ ADD main_test.go  .
 RUN GO111MODULE=off CGO_ENABLED=0 GOOS=linux go build -o ballot
 RUN GO111MODULE=off CGO_ENABLED=0 GOOS=linux go test -c -o ballot.test
 
-FROM alpine:3.16.2 as ballottest
+# To execute unit test in container
+FROM alpine:3.16 as ballottest
 LABEL maintainer="mgdevstack" \
     vendor="Zettabytes" \
     owner="zbio"
@@ -17,7 +18,7 @@ USER nobody
 CMD ["ballot.test", "-test.v"]
 
 ## Main ballot application container
-FROM alpine
+FROM alpine:3.16
 LABEL maintainer="mgdevstack" \
     vendor="Zettabytes" \
     owner="zbio"
