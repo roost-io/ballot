@@ -23,9 +23,9 @@ test-ballot:
 
 .PHONY: pre-dockerise
 pre-dockerise:
-	docker pull golang:1.19.3-alpine3.16
-	docker pull alpine:3.16
-	docker pull node:14.21.1-alpine3.16
+	docker pull golang:1.20-alpine3.17
+	docker pull alpine:3.17
+	docker pull node:14.21.1-alpine3.17
 	docker pull nginx:stable-alpine
 
 .PHONY: dockerise

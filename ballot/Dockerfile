@@ -1,4 +1,4 @@
-FROM golang:1.19.3-alpine3.16 as builder
+FROM golang:1.20-alpine3.17 as builder
 LABEL maintainer="mgdevstack" \
     vendor="Zettabytes" \
     owner="zbio" \
@@ -9,7 +9,7 @@ RUN GO111MODULE=off CGO_ENABLED=0 GOOS=linux go build -o ballot
 RUN GO111MODULE=off CGO_ENABLED=0 GOOS=linux go test -c -o ballot.test
 
 # To execute unit test in container
-FROM alpine:3.16 as ballottest
+FROM alpine:3.17 as ballottest
 LABEL maintainer="mgdevstack" \
     vendor="Zettabytes" \
     owner="zbio"
@@ -18,7 +18,7 @@ USER nobody
 CMD ["ballot.test", "-test.v"]
 
 ## Main ballot application container
-FROM alpine:3.16
+FROM alpine:3.17
 LABEL maintainer="mgdevstack" \
     vendor="Zettabytes" \
     owner="zbio"
