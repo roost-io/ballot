@@ -1,0 +1,350 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>ballot: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/roost-io/ballot/ballot/main.go (51.2%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "bytes"
+        "encoding/json"
+        "errors"
+        "fmt"
+        "io"
+        "io/ioutil"
+        "log"
+        "math/rand"
+        "net"
+        "net/http"
+        "sort"
+        "strings"
+        "sync"
+)
+
+var port string = "8080"
+var once sync.Once
+
+// candidateVotesStore holds map[candidate_id] = vote_count
+var candidateVotesStore map[string]int
+
+// Vote data
+type Vote struct {
+        CandidateID string `json:"candidate_id"`
+        VoterID     string `json:"voter_id"`
+}
+
+// CandidateVotes contains candidates and their vote counts
+type CandidateVotes struct {
+        CandidateID string `json:"candidate_id"`
+        Votes       int    `json:"vote_count"`
+}
+
+// ResultBoard to send when voting result requested
+type ResultBoard struct {
+        Results    []CandidateVotes `json:"results"`
+        TotalVotes int              `json:"total_votes"`
+}
+
+// Status to be sent in response to API request
+type Status struct {
+        Code    int    `json:"code"`
+        Message string `json:"message"`
+}
+
+// getVote returns empty data instead of nil if voting not happened
+func getCandidatesVote() map[string]int <span class="cov8" title="1">{
+        once.Do(func() </span><span class="cov8" title="1">{
+                candidateVotesStore = make(map[string]int)
+        }</span>)
+        <span class="cov8" title="1">return candidateVotesStore</span>
+}
+
+// saveVote regardless of who voted
+func saveVote(vote Vote) error <span class="cov8" title="1">{
+        candidateVotesStore = getCandidatesVote()
+        // add 2 votes, instead of 1
+        candidateVotesStore[vote.CandidateID]++
+        candidateVotesStore[vote.CandidateID]++
+        return nil
+}</span>
+
+func writeVoterResponse(w http.ResponseWriter, status Status) <span class="cov8" title="1">{
+        w.Header().Set("Content-Type", "application/json")
+        resp, err := json.Marshal(status)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Println("error marshaling response to vote request. error: ", err)
+        }</span>
+        <span class="cov8" title="1">w.Write(resp)</span>
+}
+
+func TestBallot() error <span class="cov0" title="0">{
+        _, result, err := httpClientRequest(http.MethodGet, net.JoinHostPort("", port), "/", nil)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("Failed to get ballot count resp:%s error:%+v", string(result), err)
+                return err
+        }</span>
+        <span class="cov0" title="0">log.Println("get ballot resp:", string(result))
+        var initalRespData ResultBoard
+        if err = json.Unmarshal(result, &amp;initalRespData); err != nil </span><span class="cov0" title="0">{
+                log.Printf("Failed to unmarshal get ballot response. %+v", err)
+                return err
+        }</span>
+
+        <span class="cov0" title="0">var ballotvotereq Vote
+        ballotvotereq.CandidateID = fmt.Sprint(rand.Intn(10))
+        ballotvotereq.VoterID = fmt.Sprint(rand.Intn(10))
+        reqBuff, err := json.Marshal(ballotvotereq)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("Failed to marshall post ballot request %+v", err)
+                return err
+        }</span>
+
+        <span class="cov0" title="0">_, result, err = httpClientRequest(http.MethodPost, net.JoinHostPort("", port), "/", bytes.NewReader(reqBuff))
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("Failed to get ballot count resp:%s error:%+v", string(result), err)
+                return err
+        }</span>
+        <span class="cov0" title="0">log.Println("post ballot resp:", string(result))
+        var postballotResp Status
+        if err = json.Unmarshal(result, &amp;postballotResp); err != nil </span><span class="cov0" title="0">{
+                log.Printf("Failed to unmarshal post ballot response. %+v", err)
+                return err
+        }</span>
+        <span class="cov0" title="0">if postballotResp.Code != 201 </span><span class="cov0" title="0">{
+                return errors.New("post ballot resp status code")
+        }</span>
+
+        <span class="cov0" title="0">_, result, err = httpClientRequest(http.MethodGet, net.JoinHostPort("", port), "/", nil)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("Failed to get final ballot count resp:%s error:%+v", string(result), err)
+                return err
+        }</span>
+        <span class="cov0" title="0">log.Println("get final ballot resp:", string(result))
+        var finalRespData ResultBoard
+        if err = json.Unmarshal(result, &amp;finalRespData); err != nil </span><span class="cov0" title="0">{
+                log.Printf("Failed to unmarshal get final ballot response. %+v", err)
+                return err
+        }</span>
+        <span class="cov0" title="0">if finalRespData.TotalVotes-initalRespData.TotalVotes != 1 </span><span class="cov0" title="0">{
+                return errors.New("ballot vote count error")
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+func httpClientRequest(operation, hostAddr, command string, params io.Reader) (int, []byte, error) <span class="cov8" title="1">{
+
+        url := "http://" + hostAddr + command
+        if strings.Contains(hostAddr, "http://") </span><span class="cov8" title="1">{
+                url = hostAddr + command
+        }</span>
+
+        <span class="cov8" title="1">req, err := http.NewRequest(operation, url, params)
+        if err != nil </span><span class="cov0" title="0">{
+                return http.StatusBadRequest, nil, errors.New("Failed to create HTTP request." + err.Error())
+        }</span>
+
+        <span class="cov8" title="1">req.Header.Set("Content-Type", "application/json")
+        req.Header.Set("Accept", "application/json")
+        httpClient := http.Client{}
+        resp, err := httpClient.Do(req)
+        if err != nil </span><span class="cov8" title="1">{
+                return http.StatusBadRequest, nil, err
+        }</span>
+        <span class="cov8" title="1">defer resp.Body.Close()
+
+        body, ioErr := ioutil.ReadAll(resp.Body)
+        if hBit := resp.StatusCode / 100; hBit != 2 &amp;&amp; hBit != 3 </span><span class="cov8" title="1">{
+                if ioErr != nil </span><span class="cov0" title="0">{
+                        ioErr = fmt.Errorf("status code error %d", resp.StatusCode)
+                }</span>
+        }
+        <span class="cov8" title="1">return resp.StatusCode, body, ioErr</span>
+}
+
+// countVote to show in result board.
+func countVote() (res ResultBoard, err error) <span class="cov8" title="1">{
+        votes := getCandidatesVote()
+        for candidateID, votes := range votes </span><span class="cov8" title="1">{
+                res.Results = append(res.Results, CandidateVotes{candidateID, votes})
+                res.TotalVotes += votes
+        }</span>
+
+        <span class="cov8" title="1">sort.Slice(res.Results, func(i, j int) bool </span><span class="cov8" title="1">{
+                return res.Results[i].Votes &gt; res.Results[j].Votes
+        }</span>)
+        <span class="cov8" title="1">return res, err</span>
+}
+
+func serveRoot(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        w.Header().Set("Access-Control-Allow-Origin", "*")
+        switch r.Method </span>{
+        case http.MethodGet:<span class="cov8" title="1">
+                defer r.Body.Close()
+                log.Println("result request received")
+
+                voteData, err := countVote()
+                out, err := json.Marshal(voteData)
+                if err != nil </span><span class="cov0" title="0">{
+                        log.Println("error marshaling response to result request. error: ", err)
+                }</span>
+
+                <span class="cov8" title="1">w.Header().Set("Content-Type", "application/json")
+                w.Header().Set("Access-Control-Allow-Origin", "*")
+                w.Write(out)</span>
+
+        case http.MethodPost:<span class="cov8" title="1">
+                log.Println("vote received")
+                vote := Vote{}
+                status := Status{}
+                defer writeVoterResponse(w, status)
+                defer r.Body.Close()
+
+                decoder := json.NewDecoder(r.Body)
+                err := decoder.Decode(&amp;vote)
+                if err != nil || vote.CandidateID == "" </span><span class="cov8" title="1">{
+                        log.Printf("error parsing vote data. error: %v\n", err)
+                        status.Code = http.StatusBadRequest
+                        status.Message = "Vote is not valid. Vote can not be saved"
+                        return
+                }</span>
+                <span class="cov8" title="1">log.Printf("Voting done by voter: %s to candidate: %s\n", vote.VoterID, vote.CandidateID)
+                err = saveVote(vote)
+                if err != nil </span><span class="cov0" title="0">{
+                        log.Println(err)
+                        status.Code = http.StatusBadRequest
+                        status.Message = "Vote is not valid. Vote can not be saved"
+                        return
+                }</span>
+                <span class="cov8" title="1">status.Code = http.StatusCreated
+                status.Message = "Vote saved sucessfully"
+                return</span>
+
+        default:<span class="cov8" title="1">
+                status := Status{}
+                status.Code = http.StatusMethodNotAllowed
+                status.Message = "Bad Request. Vote can not be saved"
+                return</span>
+        }
+}
+
+// runTest add votes and also checks the validity
+func runTest(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        w.Header().Set("Access-Control-Allow-Origin", "*")
+        w.Header().Set("Content-Type", "application/json")
+        defer r.Body.Close()
+        log.Println("ballot endpoint tests running")
+        status := Status{}
+        err := TestBallot()
+        if err != nil </span><span class="cov0" title="0">{
+                status.Message = fmt.Sprintf("Test Cases Failed with error : %v", err)
+                status.Code = http.StatusBadRequest
+        }</span>
+        <span class="cov0" title="0">status.Message = "Test Cases passed"
+        status.Code = http.StatusOK
+        writeVoterResponse(w, status)</span>
+}
+
+func main() <span class="cov0" title="0">{
+        log.Println("ballot is ready to store votes")
+        http.HandleFunc("/", serveRoot)
+        http.HandleFunc("/tests/run", runTest)
+        log.Println(http.ListenAndServe(net.JoinHostPort("", port), nil))
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
